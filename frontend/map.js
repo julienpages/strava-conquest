@@ -99,6 +99,7 @@ function renderTile(tile, isCurrentUser = false) {
 async function loadVisibleTiles() {
   if (!map || map.getZoom() < 8) {
     if (allTileGroup) allTileGroup.clearLayers();
+    // Ne pas effacer les userTileGroup ici
     return;
   }
 
@@ -118,7 +119,18 @@ async function loadVisibleTiles() {
     tiles.forEach(tile => {
       const isOwn = currentUser && tile.owner_id === currentUser.db_id;
       const rect = renderTile(tile, isOwn);
-      if (rect) rect.addTo(allTileGroup);
+      if (rect) {
+        if (isOwn) {
+          // Ajoute les tiles de l'utilisateur dans un groupe séparé si pas déjà présents
+          let found = false;
+          userTileGroup.eachLayer(l => {
+            if (l.getBounds && l.getBounds().equals(rect.getBounds())) found = true;
+          });
+          if (!found) rect.addTo(userTileGroup);
+        } else {
+          rect.addTo(allTileGroup);
+        }
+      }
     });
 
   } catch (e) {
