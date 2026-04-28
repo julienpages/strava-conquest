@@ -138,11 +138,13 @@ const StravaAPI = {
   async getAllActivities(after = null) {
     const activities = [];
     let page = 1;
+    const perPage = 200; // Strava API max per_page is 200
     while (true) {
-      const batch = await this.getActivities(page, 100, after);
+      const batch = await this.getActivities(page, perPage, after);
+      console.log(`Page ${page}: récupéré ${batch.length} activités`);
       if (!batch.length) break;
       activities.push(...batch);
-      if (batch.length < 100) break;
+      if (batch.length < perPage) break;
       page++;
     }
     return activities;
