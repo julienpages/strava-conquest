@@ -97,7 +97,7 @@ function renderTile(tile, isCurrentUser = false) {
 }
 
 async function loadVisibleTiles() {
-  if (!map || map.getZoom() < 10) {
+  if (!map || map.getZoom() < 8) {
     if (allTileGroup) allTileGroup.clearLayers();
     return;
   }
