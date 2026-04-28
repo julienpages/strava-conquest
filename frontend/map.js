@@ -56,6 +56,23 @@ function initMap(containerId = 'map') {
   // Initial load
   loadVisibleTiles();
 
+  // Affiche tous les tiles de l'utilisateur dès le chargement
+  setTimeout(async () => {
+    const currentUser = window.StravaAuth?.getCurrentAthlete();
+    if (currentUser && window.DB?.TilesDB?.getUserTiles) {
+      try {
+        const userTiles = await window.DB.TilesDB.getUserTiles(currentUser.db_id);
+        userTileGroup.clearLayers();
+        userTiles.forEach(tile => {
+          const rect = renderTile(tile, true);
+          if (rect) rect.addTo(userTileGroup);
+        });
+      } catch (e) {
+        console.error('Erreur chargement tiles utilisateur:', e);
+      }
+    }
+  }, 500);
+
   return map;
 }
 
