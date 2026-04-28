@@ -122,8 +122,8 @@ async function syncStravaActivities() {
   showNotification('🔄 Synchronisation Strava en cours...', 'info');
 
   try {
-    // Get recent activities (last 3 months)
-    const since = Math.floor(Date.now() / 1000) - 90 * 24 * 3600;
+    // Get activities from the last 2 years
+    const since = Math.floor(Date.now() / 1000) - 2 * 365 * 24 * 3600;
     const stravaActivities = await window.StravaAPI.getAllActivities(since);
 
     showNotification(`📥 ${stravaActivities.length} activités trouvées`, 'info');
