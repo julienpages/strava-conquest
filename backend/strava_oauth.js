@@ -125,7 +125,7 @@ const StravaAPI = {
     return this.get('/athlete');
   },
 
-  async getActivities(page = 1, perPage = 30, after = null) {
+  async getActivities(page = 5, perPage = 30, after = null) {
     const params = { page, per_page: perPage };
     if (after) params.after = after;
     return this.get('/athlete/activities', params);
@@ -137,7 +137,7 @@ const StravaAPI = {
 
   async getAllActivities(after = null) {
     const activities = [];
-    let page = 1;
+    let page = 5;
     while (true) {
       const batch = await this.getActivities(page, 100, after);
       if (!batch.length) break;
