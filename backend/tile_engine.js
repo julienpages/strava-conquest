@@ -96,9 +96,7 @@ const PathProcessor = {
           min_lat: bounds.minLat,
           min_lng: bounds.minLng,
           max_lat: bounds.maxLat,
-          max_lng: bounds.maxLng,
-          center_lat: (bounds.minLat + bounds.maxLat) / 2,
-          center_lng: (bounds.minLng + bounds.maxLng) / 2
+          max_lng: bounds.maxLng
         });
       }
     }
