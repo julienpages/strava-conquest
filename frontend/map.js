@@ -86,14 +86,9 @@ function renderTile(tile, isCurrentUser = false) {
   const color = getUserColor(userId, isCurrentUser);
   const opacity = isCurrentUser ? 0.55 : 0.35;
 
-  // Agrandir de 20% autour du centre
-  const latSize = tile.max_lat - tile.min_lat;
-  const lngSize = tile.max_lng - tile.min_lng;
-  const latPad = latSize * 0.1;
-  const lngPad = lngSize * 0.1;
   const bounds = [
-    [tile.min_lat - latPad, tile.min_lng - lngPad],
-    [tile.max_lat + latPad, tile.max_lng + lngPad]
+    [tile.min_lat, tile.min_lng],
+    [tile.max_lat, tile.max_lng]
   ];
 
   const rect = L.rectangle(bounds, {
