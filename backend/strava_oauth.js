@@ -142,6 +142,9 @@ const StravaAPI = {
     while (true) {
       const batch = await this.getActivities(page, perPage, after);
       console.log(`Page ${page}: récupéré ${batch.length} activités`);
+      if (batch.length) {
+        console.log('IDs:', batch.map(a => a.id));
+      }
       if (!batch.length) break;
       activities.push(...batch);
       if (batch.length < perPage) break;
