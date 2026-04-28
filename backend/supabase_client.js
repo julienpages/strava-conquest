@@ -6,26 +6,26 @@ const SUPABASE_URL = window.ENV?.SUPABASE_URL || 'https://YOUR_PROJECT.supabase.
 const SUPABASE_ANON_KEY = window.ENV?.SUPABASE_ANON_KEY || 'YOUR_ANON_KEY';
 
 // Initialize Supabase client (loaded via CDN in index.html)
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ============================================
 // AUTH HELPERS
 // ============================================
 const Auth = {
   async getSession() {
-    const { data, error } = await supabase.auth.getSession();
+    const { data, error } = await sb.auth.getSession();
     if (error) throw error;
     return data.session;
   },
 
   async getUser() {
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const { data: { user }, error } = await sb.auth.getUser();
     if (error) return null;
     return user;
   },
 
   onAuthChange(callback) {
-    return supabase.auth.onAuthStateChange(callback);
+    return sb.auth.onAuthStateChange(callback);
   }
 };
 
@@ -34,7 +34,7 @@ const Auth = {
 // ============================================
 const UserDB = {
   async upsert(userData) {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from('users')
       .upsert(userData, { onConflict: 'strava_id' })
       .select()
@@ -44,7 +44,7 @@ const UserDB = {
   },
 
   async getById(id) {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from('users')
       .select('*')
       .eq('id', id)
@@ -54,7 +54,7 @@ const UserDB = {
   },
 
   async getByStravaId(stravaId) {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from('users')
       .select('*')
       .eq('strava_id', stravaId)
@@ -64,7 +64,7 @@ const UserDB = {
   },
 
   async updateStats(userId, stats) {
-    const { error } = await supabase
+    const { error } = await sb
       .from('users')
       .update({ ...stats, updated_at: new Date().toISOString() })
       .eq('id', userId);
@@ -77,7 +77,7 @@ const UserDB = {
 // ============================================
 const TilesDB = {
   async upsertTile(tileData) {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from('tiles_captured')
       .upsert(tileData, { onConflict: 'tile_id' })
       .select()
@@ -87,7 +87,7 @@ const TilesDB = {
   },
 
   async getTilesByBounds(minLat, minLng, maxLat, maxLng) {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from('tiles_captured')
       .select(`
         *,
@@ -102,7 +102,7 @@ const TilesDB = {
   },
 
   async getUserTiles(userId) {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from('tiles_captured')
       .select('*')
       .eq('owner_id', userId);
@@ -111,7 +111,7 @@ const TilesDB = {
   },
 
   async countUserTiles(userId) {
-    const { count, error } = await supabase
+    const { count, error } = await sb
       .from('tiles_captured')
       .select('*', { count: 'exact', head: true })
       .eq('owner_id', userId);
@@ -120,7 +120,7 @@ const TilesDB = {
   },
 
   async getAllTiles() {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from('tiles_captured')
       .select(`
         tile_id, tile_x, tile_y, owner_id, min_lat, min_lng, max_lat, max_lng,
@@ -137,7 +137,7 @@ const TilesDB = {
 // ============================================
 const ActivitiesDB = {
   async upsert(activity) {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from('activities')
       .upsert(activity, { onConflict: 'strava_activity_id' })
       .select()
@@ -147,7 +147,7 @@ const ActivitiesDB = {
   },
 
   async getUserActivities(userId, limit = 20) {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from('activities')
       .select('*')
       .eq('user_id', userId)
@@ -158,7 +158,7 @@ const ActivitiesDB = {
   },
 
   async getUnprocessed(userId) {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from('activities')
       .select('*')
       .eq('user_id', userId)
@@ -169,7 +169,7 @@ const ActivitiesDB = {
   },
 
   async markProcessed(activityId, tilesCount, pointsEarned) {
-    const { error } = await supabase
+    const { error } = await sb
       .from('activities')
       .update({ processed: true, tiles_captured: tilesCount, points_earned: pointsEarned })
       .eq('id', activityId);
@@ -183,7 +183,7 @@ const ActivitiesDB = {
 const LeaderboardDB = {
   async getTop(season = null, limit = 20) {
     const currentSeason = season || getCurrentSeason();
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from('leaderboard_scores')
       .select(`
         *,
@@ -197,7 +197,7 @@ const LeaderboardDB = {
   },
 
   async upsertScore(userId, season, scoreData) {
-    const { error } = await supabase
+    const { error } = await sb
       .from('leaderboard_scores')
       .upsert({
         user_id: userId,
@@ -210,7 +210,7 @@ const LeaderboardDB = {
 
   async getUserRank(userId, season = null) {
     const currentSeason = season || getCurrentSeason();
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .rpc('get_user_rank', { p_user_id: userId, p_season: currentSeason });
     if (error) return null;
     return data;
@@ -222,7 +222,7 @@ const LeaderboardDB = {
 // ============================================
 const BadgesDB = {
   async getUserBadges(userId) {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from('badges')
       .select('*')
       .eq('user_id', userId);
@@ -231,7 +231,7 @@ const BadgesDB = {
   },
 
   async awardBadge(userId, badgeType, level = 1) {
-    const { error } = await supabase
+    const { error } = await sb
       .from('badges')
       .upsert({ user_id: userId, badge_type: badgeType, badge_level: level },
                { onConflict: 'user_id,badge_type' });
@@ -249,4 +249,4 @@ function getCurrentSeason() {
 }
 
 // Export
-window.DB = { Auth, UserDB, TilesDB, ActivitiesDB, LeaderboardDB, BadgesDB, getCurrentSeason, supabase };
+window.DB = { Auth, UserDB, TilesDB, ActivitiesDB, LeaderboardDB, BadgesDB, getCurrentSeason, supabase: sb };
