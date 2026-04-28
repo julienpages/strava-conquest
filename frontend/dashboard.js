@@ -60,6 +60,11 @@ async function initDashboard() {
     window.MapEngine.initMap('map');
     window.MapEngine.syncAndDisplay();
 
+    // Zoom to user's tiles if they exist, otherwise try to use athlete location
+    if (window.AppState.tiles.length > 0) {
+      setTimeout(() => window.MapEngine.fitToUserTiles(window.AppState.tiles), 500);
+    }
+
     renderUserProfile();
     renderDashboardStats();
     renderLeaderboard();
@@ -128,28 +133,36 @@ async function syncStravaActivities() {
     let pointsTotal = 0;
 
     for (const act of stravaActivities) {
+      // List endpoint only has summary_polyline; fetch detail if missing
+      let actData = act;
+      if (!act.map?.summary_polyline && !act.map?.polyline) {
+        try {
+          actData = await window.StravaAPI.getActivity(act.id);
+        } catch (_) {}
+      }
+
       // Save activity to DB
       const dbActivity = await window.DB.ActivitiesDB.upsert({
-        strava_activity_id: act.id,
+        strava_activity_id: actData.id,
         user_id: window.AppState.currentUser.db_id,
-        name: act.name,
-        sport_type: act.sport_type || act.type,
-        start_date: act.start_date,
-        distance: act.distance,
-        moving_time: act.moving_time,
-        elapsed_time: act.elapsed_time,
-        total_elevation_gain: act.total_elevation_gain,
-        average_speed: act.average_speed,
-        max_speed: act.max_speed,
-        calories: act.calories,
-        polyline: act.map?.summary_polyline || act.map?.polyline
+        name: actData.name,
+        sport_type: actData.sport_type || actData.type,
+        start_date: actData.start_date,
+        distance: actData.distance,
+        moving_time: actData.moving_time,
+        elapsed_time: actData.elapsed_time,
+        total_elevation_gain: actData.total_elevation_gain,
+        average_speed: actData.average_speed,
+        max_speed: actData.max_speed,
+        calories: actData.calories,
+        polyline: actData.map?.summary_polyline || actData.map?.polyline
       });
 
       // Process tiles if not already done
       if (!dbActivity?.processed && dbActivity?.id) {
-        act.db_id = dbActivity.id;
+        actData.db_id = dbActivity.id;
         const result = await window.TileEngine.ActivityProcessor.processActivity(
-          act, window.AppState.currentUser.db_id
+          actData, window.AppState.currentUser.db_id
         );
 
         if (result.totalTiles > 0) {
@@ -170,6 +183,10 @@ async function syncStravaActivities() {
 
     renderDashboardStats();
     renderActivitiesList();
+
+    if (window.AppState.tiles.length > 0) {
+      window.MapEngine.fitToUserTiles(window.AppState.tiles);
+    }
     window.MapEngine.loadVisibleTiles();
 
     showNotification(
