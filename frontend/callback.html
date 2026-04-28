@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Strava Conquest — Connexion...</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: #080b10;
+      color: #F0F4F8;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .logo {
+      font-family: Georgia, serif;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: #FF3B3B;
+    }
+    .status { color: #8899AA; font-size: 14px; }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 2px solid rgba(255,59,59,0.2);
+      border-top-color: #FF3B3B;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="logo">⚔ CONQUEST</div>
+  <div class="spinner"></div>
+  <div class="status" id="status">Authentification Strava en cours...</div>
+
+  <script>
+    window.ENV = {
+      STRAVA_CLIENT_ID: 'YOUR_STRAVA_CLIENT_ID',
+      STRAVA_CLIENT_SECRET: 'YOUR_STRAVA_CLIENT_SECRET'
+    };
+  </script>
+  <script>
+    async function handleCallback() {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const error = params.get('error');
+
+      if (error) {
+        document.getElementById('status').textContent = 'Connexion refusée.';
+        setTimeout(() => window.location.href = '/', 2000);
+        return;
+      }
+
+      if (!code) {
+        window.location.href = '/';
+        return;
+      }
+
+      try {
+        const clientId = window.ENV?.STRAVA_CLIENT_ID || 'YOUR_STRAVA_CLIENT_ID';
+        const clientSecret = window.ENV?.STRAVA_CLIENT_SECRET || 'YOUR_STRAVA_CLIENT_SECRET';
+
+        document.getElementById('status').textContent = 'Échange du token...';
+
+        const response = await fetch('https://www.strava.com/oauth/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            client_id: clientId,
+            client_secret: clientSecret,
+            code,
+            grant_type: 'authorization_code'
+          })
+        });
+
+        if (!response.ok) throw new Error('Token exchange failed');
+
+        const tokenData = await response.json();
+
+        // Store tokens
+        localStorage.setItem('strava_tokens', JSON.stringify({
+          access_token: tokenData.access_token,
+          refresh_token: tokenData.refresh_token,
+          expires_at: tokenData.expires_at,
+          athlete: tokenData.athlete
+        }));
+
+        document.getElementById('status').textContent = `Bienvenue, ${tokenData.athlete?.firstname}! Redirection...`;
+        setTimeout(() => window.location.href = '/', 1000);
+
+      } catch (e) {
+        document.getElementById('status').textContent = 'Erreur: ' + e.message;
+        setTimeout(() => window.location.href = '/?error=auth_failed', 2000);
+      }
+    }
+
+    handleCallback();
+  </script>
+</body>
+</html>
