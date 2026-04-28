@@ -5,7 +5,7 @@
 const STRAVA_CONFIG = {
   clientId: window.ENV?.STRAVA_CLIENT_ID || 'YOUR_STRAVA_CLIENT_ID',
   clientSecret: window.ENV?.STRAVA_CLIENT_SECRET || 'YOUR_STRAVA_CLIENT_SECRET',
-  redirectUri: window.location.origin + '/callback.html',
+  redirectUri: window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'frontend/callback.html',
   scope: 'read,activity:read_all,profile:read_all',
   authUrl: 'https://www.strava.com/oauth/authorize',
   tokenUrl: 'https://www.strava.com/oauth/token',

@@ -54,12 +54,12 @@
 
       if (error) {
         document.getElementById('status').textContent = 'Connexion refusée.';
-        setTimeout(() => window.location.href = '/', 2000);
+        setTimeout(() => window.location.href = '../', 2000);
         return;
       }
 
       if (!code) {
-        window.location.href = '/';
+        window.location.href = '../';
         return;
       }
 
@@ -93,11 +93,11 @@
         }));
 
         document.getElementById('status').textContent = `Bienvenue, ${tokenData.athlete?.firstname}! Redirection...`;
-        setTimeout(() => window.location.href = '/', 1000);
+        setTimeout(() => window.location.href = '../', 1000);
 
       } catch (e) {
         document.getElementById('status').textContent = 'Erreur: ' + e.message;
-        setTimeout(() => window.location.href = '/?error=auth_failed', 2000);
+        setTimeout(() => window.location.href = '../?error=auth_failed', 2000);
       }
     }
 
