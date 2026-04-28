@@ -3,13 +3,12 @@
 // ============================================
 
 const STRAVA_CONFIG = {
-  clientId: window.ENV?.STRAVA_CLIENT_ID || 'YOUR_STRAVA_CLIENT_ID',
-  clientSecret: window.ENV?.STRAVA_CLIENT_SECRET || 'YOUR_STRAVA_CLIENT_SECRET',
+  clientId:    window.ENV?.STRAVA_CLIENT_ID || 'YOUR_STRAVA_CLIENT_ID',
   redirectUri: window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'frontend/callback.html',
-  scope: 'read,activity:read_all,profile:read_all',
-  authUrl: 'https://www.strava.com/oauth/authorize',
-  tokenUrl: 'https://www.strava.com/oauth/token',
-  apiBase: 'https://www.strava.com/api/v3'
+  scope:       'read,activity:read_all,profile:read_all',
+  authUrl:     'https://www.strava.com/oauth/authorize',
+  apiBase:     'https://www.strava.com/api/v3',
+  edgeFnUrl:   () => `${window.ENV?.SUPABASE_URL}/functions/v1/strava-token`,
 };
 
 // ============================================
@@ -28,33 +27,23 @@ const StravaAuth = {
     window.location.href = `${STRAVA_CONFIG.authUrl}?${params}`;
   },
 
-  // Step 2: Exchange code for token (called from callback page)
+  // Step 2: Exchange code for token — proxied through Edge Function (secret stays server-side)
   async exchangeCodeForToken(code) {
-    const response = await fetch(STRAVA_CONFIG.tokenUrl, {
+    const response = await fetch(STRAVA_CONFIG.edgeFnUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        client_id: STRAVA_CONFIG.clientId,
-        client_secret: STRAVA_CONFIG.clientSecret,
-        code,
-        grant_type: 'authorization_code'
-      })
+      body: JSON.stringify({ code })
     });
     if (!response.ok) throw new Error('Token exchange failed');
     return response.json();
   },
 
-  // Step 3: Refresh expired token
+  // Step 3: Refresh expired token — proxied through Edge Function
   async refreshToken(refreshToken) {
-    const response = await fetch(STRAVA_CONFIG.tokenUrl, {
+    const response = await fetch(STRAVA_CONFIG.edgeFnUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        client_id: STRAVA_CONFIG.clientId,
-        client_secret: STRAVA_CONFIG.clientSecret,
-        refresh_token: refreshToken,
-        grant_type: 'refresh_token'
-      })
+      body: JSON.stringify({ refresh_token: refreshToken })
     });
     if (!response.ok) throw new Error('Token refresh failed');
     return response.json();

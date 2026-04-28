@@ -42,8 +42,8 @@
 
   <script>
     window.ENV = {
-      STRAVA_CLIENT_ID: 'YOUR_STRAVA_CLIENT_ID',
-      STRAVA_CLIENT_SECRET: 'YOUR_STRAVA_CLIENT_SECRET'
+      SUPABASE_URL: 'https://vwzwbhqzwndxhfrbtirl.supabase.co'
+      // Aucun secret ici — l'échange de token se fait via la Edge Function
     };
   </script>
   <script>
@@ -64,20 +64,13 @@
       }
 
       try {
-        const clientId = window.ENV?.STRAVA_CLIENT_ID || 'YOUR_STRAVA_CLIENT_ID';
-        const clientSecret = window.ENV?.STRAVA_CLIENT_SECRET || 'YOUR_STRAVA_CLIENT_SECRET';
-
         document.getElementById('status').textContent = 'Échange du token...';
 
-        const response = await fetch('https://www.strava.com/oauth/token', {
+        const edgeFnUrl = `${window.ENV.SUPABASE_URL}/functions/v1/strava-token`;
+        const response = await fetch(edgeFnUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            client_id: clientId,
-            client_secret: clientSecret,
-            code,
-            grant_type: 'authorization_code'
-          })
+          body: JSON.stringify({ code })
         });
 
         if (!response.ok) throw new Error('Token exchange failed');
